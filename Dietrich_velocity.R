@@ -11,12 +11,11 @@ Dietrich.velocity.m.sec <- function(salinity, # in psu
 ){
   # load required packages
   require(marelac)
-  require(matrixStats)
   
   # calculate gravity
   gravity <- gravity(lat = latitude, method = "Moritz")
   # calculate water parameters
-  water.density <- sw_dens(S = salinity, t = temperature, P = d2p(depth, lat = latitude)/10+1) # value of d2p is dbar of pressure exerted by water, without air, hence /10 and +1 ; method="Gibbs" by default
+  water.density <- sw_dens(S = salinity, t = temperature, P = d2p(depth, lat = latitude)/10+1, method = "UNESCO") # value of d2p is dbar of pressure exerted by water, without air, hence /10 and +1 ; method="Gibbs" by default
   dynamic.viscosity <- viscosity(S = salinity, t = temperature, P = d2p(depth, lat = latitude)/10+1) # viscosity in centipoise (cP); 1 cP = 0.001 kg·m−1·s−1
   kinematic.viscosity <- dynamic.viscosity / 1000 / water.density # factor 10^-3 to convert viscosity to [kg/m/s]
 

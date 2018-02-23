@@ -1,4 +1,4 @@
-Dietrich sinking velocity
+sinking velocity
 ================
 David Kaiser
 2018-02-23

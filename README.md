@@ -1,0 +1,57 @@
+Dietrich sinking velocity
+================
+David Kaiser
+2018-02-23
+
+Description
+-----------
+
+Calculates the sinking velocity of a particle in a fluid according to formulas by [Dietrich (1982)](http://onlinelibrary.wiley.com/doi/10.1029/WR018i006p01615/abstract). The function was originally written to calculate the theoretical sinking velocity of microplastic particles with diameters &lt; 5 mm but &gt; 200 µm. This calculation was used e.g. by [Kowalski et al. (2016)](https://www.sciencedirect.com/science/article/pii/S0025326X16303848), because the commonly used Stokes formula overestimates sinking velocity for particles with diameters &gt; 200 µm. The formula by Dietrich considers effects of fluid denisty as well as particle size, shape and roundness. For non-spherical particles, the size/diameter can be expressed as equivalent spherical diameter (ESD) [(e.g. Kumar et al. 2010)](https://www.sciencedirect.com/science/article/pii/S0278434310003134). the calculation only works when the density of the particle is higher than that of the fluid, i.e. when there is downward sinking. Otherwise the result is NaN.
+
+The function requires the packages **marelac** and **matrixStats** to be installed. The packages are loaded by the function with a call to library().
+
+Arguments
+---------
+
+-   *salinity* -- in psu
+-   *temperature* -- in °C
+-   *depth* -- in m
+-   *latitude* -- in °N (negative for southern hemisphere), used to calculate pressure for density as well as gravity
+-   *particle.density* -- in kg m<sup>-3</sup>
+-   *particle.diameter* -- in m
+-   *powers.p* = 6 -- [Powers](https://pubs.geoscienceworld.org/sepm/jsedres/article-abstract/23/2/117/112811/a-new-roundness-scale-for-sedimentary-particles?redirectedFrom=fulltext) roundness; defaults to 6 for perfectly round areas, including shperes
+-   *CSF* = 1 -- [Corey Shape Factor](https://www.researchgate.net/publication/252625134_Settling_Velocities_of_Circular_Cylinders_at_Low_Reynolds_Numbers); defaults to 1 for spheres
+
+Value
+-----
+
+A numeric value of the sinking velocity in m s<sup>-1</sup>
+
+Example
+-------
+
+Calculate the sinking velocity \[m s<sup>-1</sup>\] for a polystyrene sphere (density is 1050 kg m<sup>-3</sup>) with a diameter of 1.5 mm diameter, in temperate ocean surface water.
+
+``` r
+Dietrich.velocity.m.sec(salinity = 36, 
+                        temperature = 20, 
+                        depth = 0.2, 
+                        latitude = 40, 
+                        particle.density = 1050, 
+                        particle.diameter = 0.0015)
+```
+
+    ## [1] 0.0119715
+
+Sinking velocity cannot be calculated for particles with lower density than the fluid, e.g. polystyrene in temperate ocean surface water.
+
+``` r
+Dietrich.velocity.m.sec(salinity = 36, 
+                        temperature = 20, 
+                        depth = 0.2, 
+                        latitude = 40, 
+                        particle.density = 955, 
+                        particle.diameter = 0.0015)
+```
+
+    ## [1] NaN

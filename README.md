@@ -43,7 +43,7 @@ Dietrich.velocity.m.sec(salinity = 36,
 
     ## [1] 0.0119715
 
-Sinking velocity cannot be calculated for particles with lower density than the fluid, e.g. polystyrene in temperate ocean surface water.
+Sinking velocity cannot be calculated for particles with lower density than the fluid, e.g. polyethylene in temperate ocean surface water.
 
 ``` r
 Dietrich.velocity.m.sec(salinity = 36, 

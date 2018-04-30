@@ -2,7 +2,7 @@
 #### using formulas from Dietrich 1982 (Water Resour. Res.)
 #### or Stokes' Law
 # by david.kaiser.82@gmail.com, github.com/davidatlarge
-sinking.velocity.m.sec <- function(salinity, # in psu
+sinking.velocity.m.sec <- function(salinity, # practical salinity
                                    temperature, # in °C
                                    depth, # depth in m
                                    latitude, # latitude in °N, used to calculate pressure for density and gravity
@@ -10,10 +10,10 @@ sinking.velocity.m.sec <- function(salinity, # in psu
                                    particle.diameter, # in m
                                    powers.p = 6, # powers roundness; defaults to 6 for perfectly round areas, including shperes
                                    CSF = 1, # Corey Shape factor; defaults to 1 for spheres
-                                   method = "dietrich" # calculation method, c("dietrich", "stokes")
+                                   method = "dietrich" # calculation method, c("dietrich", "stokes", "zhiyao")
 ){
   # load required packages
-  require(marelac)
+  library(marelac)
   
   # calculate gravity
   gravity <- gravity(lat = latitude, method = "Moritz")
@@ -34,9 +34,14 @@ sinking.velocity.m.sec <- function(salinity, # in psu
            sinking.velocity.m.sec <- ((Wstar*(particle.density-water.density) * gravity*kinematic.viscosity) / water.density)^(1/3) # introduced NaN for those particles that have no value for ESD because the dimensions were not measured
          },
          "stokes" = { # ... according to Stokes' Law
-           if(particle.diameter > 0.0002) {warning("Particle diameter > 200 µm! \n Stokes' Law will overestimate sinking velocity! \n Use default method = \"dietrich\"!", call. = FALSE)}
+           if(particle.diameter > 0.0002) {warning("Particle diameter > 200 µm! \n Stokes' Law will overestimate sinking velocity! \n Use method = \"dietrich\" or \"zhiyao\"!", call. = FALSE)}
            sinking.velocity.m.sec <- (particle.diameter^2*gravity*(particle.density-water.density)) / (18*dynamic.viscosity)
            if(sinking.velocity.m.sec <= 0){sinking.velocity.m.sec <- NaN}
+         }, 
+         "zhiyao" = {
+           delta <- particle.density/water.density-1 
+           Dstar <- ((delta*gravity)/kinematic.viscosity^2)^(1/3)*particle.diameter # formula (5)
+           sinking.velocity.m.sec <- (kinematic.viscosity/particle.diameter)*Dstar^3 * (38.1+0.93*Dstar^(12/7))^(-7/8) # formula (11)
          }
   )
   if(particle.density<water.density){

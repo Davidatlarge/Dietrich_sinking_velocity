@@ -7,12 +7,12 @@ output: github_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-source("Dietrich_velocity.R")
+source("sinking_velocity.R")
 ```
 
 ## Description
 
-Calculates the sinking velocity of a particle in a fluid. By default uses formulas by [Dietrich (1982)](http://onlinelibrary.wiley.com/doi/10.1029/WR018i006p01615/abstract). The script was originally written to calculate the theoretical sinking velocity of microplastic particles with diameters < 5 mm but > 200 µm. This calculation was used e.g. by [Kowalski et al. (2016)](https://www.sciencedirect.com/science/article/pii/S0025326X16303848), because the commonly used Stokes formula overestimates sinking velocity for particles with diameters > 200 µm. The formula by Dietrich considers effects of fluid denisty as well as particle density, size, shape and roundness. Alternatively, setting the argument *method* = "stokes", returns sinking velocity according to Stokes' Law [(see e.g. Glokzin et al. 2010)](https://www.sciencedirect.com/science/article/pii/S0304420314000097). This only considers water denisty and particle size and density, and thus considers all particles perfect spheres. If the particle diameter is > 200 µm, a warning will be printed but the value will be returned nontheless. 
+Calculates the sinking velocity of a particle in a fluid, in meters per second. By default uses formulas by [Dietrich (1982)](http://onlinelibrary.wiley.com/doi/10.1029/WR018i006p01615/abstract). The script was originally written to calculate the theoretical sinking velocity of microplastic particles with diameters < 5 mm but > 200 µm. This calculation was used e.g. by [Kowalski et al. (2016)](https://www.sciencedirect.com/science/article/pii/S0025326X16303848), because the commonly used Stokes formula overestimates sinking velocity for particles with diameters > 200 µm. The formula by Dietrich considers effects of fluid denisty as well as particle density, size, shape and roundness. Alternatively, setting the argument *method* = "stokes" returns sinking velocity according to Stokes' Law [(see e.g. Glokzin et al. 2010)](https://www.sciencedirect.com/science/article/pii/S0304420314000097). This only considers water denisty and particle size and density, and thus considers all particles perfect spheres. If the particle diameter is > 200 µm, a warning will be printed but the value will be returned nontheless. Additionally, setting *method* = "zhiyao" returns sinking velocity calculated after [Zhiyao et al. (2008)](https://www.sciencedirect.com/science/article/pii/S167423701530017X). This method does not require input of shape related variables, but the Zhiyao et al. claim their formula is applicable to a wide range of particle shapes and sizes (with Reynolds numbers < 2 x $10^5$).
 
 For non-spherical particles, the size/diameter can be expressed as equivalent spherical diameter (ESD) [(e.g. Kumar et al. 2010)](https://www.sciencedirect.com/science/article/pii/S0278434310003134).
 
@@ -30,7 +30,7 @@ The function requires the package **marelac** to be installed. The package is lo
 * *particle.diameter* -- in m
 * *powers.p* = 6 -- [Powers](https://pubs.geoscienceworld.org/sepm/jsedres/article-abstract/23/2/117/112811/a-new-roundness-scale-for-sedimentary-particles?redirectedFrom=fulltext) roundness; defaults to 6 for perfectly round projected areas, including those of spheres
 * *CSF* = 1 -- [Corey Shape Factor](https://www.researchgate.net/publication/252625134_Settling_Velocities_of_Circular_Cylinders_at_Low_Reynolds_Numbers); defaults to 1 for spheres
-* *method* = c("dietrich", "stokes") -- method to calculate the sinking velocity, defaults to "dietrich"
+* *method* = c("dietrich", "stokes", "zhiyao") -- method to calculate the sinking velocity, defaults to "dietrich"
 
 ## Value
 
@@ -38,7 +38,7 @@ A numeric value of the sinking velocity in m s^-1^
 
 ## Example
 
-Use Dietrich  formula to calculate the sinking velocity [m s^-1^] for a polystyrene sphere (density is 1050 kg m^-3^) with a diameter of 1.5 mm, in temperate ocean surface water.
+Use Dietrich formula to calculate the sinking velocity [m s^-1^] for a polystyrene sphere (density is 1050 kg m^-3^) with a diameter of 1.5 mm, in temperate ocean surface water.
 
 ```{r Dietrich1, message=FALSE, warning=FALSE, paged.print=FALSE}
 sinking.velocity.m.sec(salinity = 36, 
@@ -47,6 +47,18 @@ sinking.velocity.m.sec(salinity = 36,
                         latitude = 40, 
                         particle.density = 1050, 
                         particle.diameter = 0.0015)
+```
+
+Use Zhiyao et al. formula for the same case.
+
+```{r Zhiyao1, message=FALSE, warning=FALSE, paged.print=FALSE}
+sinking.velocity.m.sec(salinity = 36, 
+                        temperature = 20, 
+                        depth = 0.2, 
+                        latitude = 40, 
+                        particle.density = 1050, 
+                        particle.diameter = 0.0015,
+                       method = "zhiyao")
 ```
 
 Use Stokes  formula to calculate the sinking velocity [m s^-1^] for a polystyrene sphere (density is 1050 kg m^-3^) with a diameter of 1.5 mm, in temperate ocean surface water. Prints a warning but also returns the value.

@@ -1,6 +1,7 @@
 #### particle sinking velocity in fluids 
 #### using formulas from Dietrich 1982 (Water Resour. Res.)
 #### or Stokes' Law
+#### or Zhiyao et al. 2008 (Water Science and Engineering)
 # by david.kaiser.82@gmail.com, github.com/davidatlarge
 sinking.velocity.m.sec <- function(salinity, # practical salinity
                                    temperature, # in °C

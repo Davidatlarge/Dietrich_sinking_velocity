@@ -13,14 +13,11 @@ sinking.velocity.m.sec <- function(salinity, # practical salinity
                                    CSF = 1, # Corey Shape factor; defaults to 1 for spheres
                                    method = "dietrich" # calculation method, c("dietrich", "stokes", "zhiyao")
 ){
-  # load required packages
-  library(marelac)
-  
   # calculate gravity
-  gravity <- gravity(lat = latitude, method = "Moritz")
+  gravity <- marelac::gravity(lat = latitude, method = "Moritz")
   # calculate water parameters
-  water.density <- sw_dens(S = salinity, t = temperature, P = d2p(depth, lat = latitude)/10+1, method = "UNESCO") # value of d2p is dbar of pressure exerted by water, without air, hence /10 and +1 ; method="Gibbs" by default
-  dynamic.viscosity <- viscosity(S = salinity, t = temperature, P = d2p(depth, lat = latitude)/10+1) # viscosity in centipoise (cP); 1 cP = 0.001 kg·m−1·s−1
+  water.density <- marelac::sw_dens(S = salinity, t = temperature, P = seacarb::d2p(depth, lat = latitude)/10+1, method = "UNESCO") # value of d2p is dbar of pressure exerted by water, without air, hence /10 and +1 ; method="Gibbs" by default
+  dynamic.viscosity <- marelac::viscosity(S = salinity, t = temperature, P = seacarb::d2p(depth, lat = latitude)/10+1) # viscosity in centipoise (cP); 1 cP = 0.001 kg·m−1·s−1
   dynamic.viscosity <- dynamic.viscosity / 1000 # factor 10^-3 to convert viscosity to [kg/m/s]
   kinematic.viscosity <- dynamic.viscosity / water.density 
   
@@ -35,7 +32,7 @@ sinking.velocity.m.sec <- function(salinity, # practical salinity
            sinking.velocity.m.sec <- ((Wstar*(particle.density-water.density) * gravity*kinematic.viscosity) / water.density)^(1/3) # introduced NaN for those particles that have no value for ESD because the dimensions were not measured
          },
          "stokes" = { # ... according to Stokes' Law
-           if(particle.diameter > 0.0002) {warning("Particle diameter > 200 µm! \n Stokes' Law will overestimate sinking velocity! \n Use method = \"dietrich\" or \"zhiyao\"!", call. = FALSE)}
+           if(particle.diameter > 0.0002) {warning("Particle diameter > 200 µm! \n Stokes' Law will overestimate sinking velocity! \n Use another method!", call. = FALSE)}
            sinking.velocity.m.sec <- (particle.diameter^2*gravity*(particle.density-water.density)) / (18*dynamic.viscosity)
            if(sinking.velocity.m.sec <= 0){sinking.velocity.m.sec <- NaN}
          }, 
@@ -43,6 +40,20 @@ sinking.velocity.m.sec <- function(salinity, # practical salinity
            delta <- particle.density/water.density-1 
            Dstar <- ((delta*gravity)/kinematic.viscosity^2)^(1/3)*particle.diameter # formula (5)
            sinking.velocity.m.sec <- (kinematic.viscosity/particle.diameter)*Dstar^3 * (38.1+0.93*Dstar^(12/7))^(-7/8) # formula (11)
+         },
+         "ahrens" = {
+           Delta <- (particle.density - water.density) / water.density
+           particle.diameter.cm <- particle.diameter * 100
+           kinematic.viscosity.cm2.s <- kinematic.viscosity * 10000
+           gravity.cm.s2 <- gravity * 100
+           
+           A <- Delta * gravity.cm.s2 * particle.diameter.cm^3 / kinematic.viscosity.cm2.s^2
+           C1 <- 0.055 * tanh(12*A^-0.59 * exp(-0.0004*A))
+           Ct <- 1.06 * tanh(0.016*A^0.50 * exp(-120/A))
+    
+           sinking.velocity.cm.sec <- C1 * Delta * gravity.cm.s2 * particle.diameter.cm^2 / kinematic.viscosity.cm2.s + # term associated with laminar flow
+             Ct * sqrt(Delta * gravity.cm.s2 * particle.diameter.cm) # term associated with turbulent flow
+           sinking.velocity.m.sec <- sinking.velocity.cm.sec / 100
          }
   )
   if(particle.density<water.density){

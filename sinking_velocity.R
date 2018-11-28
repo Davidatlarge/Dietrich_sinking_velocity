@@ -10,8 +10,8 @@ sinking.velocity.m.sec <- function(salinity, # practical salinity
                                    particle.density, # in kg/m^3 
                                    particle.diameter, # in m
                                    powers.p = 6, # powers roundness; defaults to 6 for perfectly round areas, including shperes
-                                   CSF = 1, # Corey Shape factor; defaults to 1 for spheres
-                                   method = "dietrich" # calculation method, c("dietrich", "stokes", "zhiyao")
+                                   shape.factor = 1, # should be Corey Shape factor for Dietrich and Janke E shape factor for Komar; defaults to 1 for spheres
+                                   method = "dietrich" # calculation method, c("dietrich", "stokes", "zhiyao", "ahrens", "komar")
 ){
   # calculate gravity
   gravity <- marelac::gravity(lat = latitude, method = "Moritz")
@@ -26,8 +26,8 @@ sinking.velocity.m.sec <- function(salinity, # practical salinity
          "dietrich" = { # ... according to Dietrich 1982
            Dstar <- ((particle.density - water.density) * gravity * particle.diameter^3) / (water.density * kinematic.viscosity^2) # dimensionless size D*; introduces NaN for particles with lower density than water
            R1 <- -3.76715 + 1.92944*(log10(Dstar)) - 0.09815*(log10(Dstar))^2 - 0.00575*(log10(Dstar))^3 + 0.00056*(log10(Dstar))^4 # size and denisty effect
-           R2 <- (log10(1-((1-CSF)/0.85))) - (1-CSF)^2.3*tanh(log10(Dstar)-4.6) + 0.3*(0.5-CSF)*(1-CSF)^2 * (log10(Dstar)-4.6) # shape effect
-           R3 <- (0.65-((CSF/2.83) * tanh(log10(Dstar)-4.6)))^(1+(3.5-powers.p)/2.5) # roundness effect
+           R2 <- (log10(1-((1-shape.factor)/0.85))) - (1-shape.factor)^2.3*tanh(log10(Dstar)-4.6) + 0.3*(0.5-shape.factor)*(1-shape.factor)^2 * (log10(Dstar)-4.6) # shape effect
+           R3 <- (0.65-((shape.factor/2.83) * tanh(log10(Dstar)-4.6)))^(1+(3.5-powers.p)/2.5) # roundness effect
            Wstar <- R3 * 10^(R1+R2) 
            sinking.velocity.m.sec <- ((Wstar*(particle.density-water.density) * gravity*kinematic.viscosity) / water.density)^(1/3) # introduced NaN for those particles that have no value for ESD because the dimensions were not measured
          },
@@ -54,6 +54,14 @@ sinking.velocity.m.sec <- function(salinity, # practical salinity
            sinking.velocity.cm.sec <- C1 * Delta * gravity.cm.s2 * particle.diameter.cm^2 / kinematic.viscosity.cm2.s + # term associated with laminar flow
              Ct * sqrt(Delta * gravity.cm.s2 * particle.diameter.cm) # term associated with turbulent flow
            sinking.velocity.m.sec <- sinking.velocity.cm.sec / 100
+         },
+         "komar" = { # velocity for ellipsoid particles according to Komar 1980 (equation 2 in abstract)
+           sinking.velocity.m.sec <- (1/18) * 
+             (1/dynamic.viscosity) * 
+             (particle.density - water.density) * 
+             gravity * 
+             particle.diameter^2 * 
+             shape.factor^0.380 
          }
   )
   if(particle.density<water.density){
